@@ -26,7 +26,7 @@
 			<nav class="nav header__menu">
 				<ul class="header__menu-list">
 					<li class="header__menu-item">
-						<button class="header__menu-button button" type="button">Mute</button>
+						<button class="header__menu-button button" type="button">Play</button>
 					</li>
 					<li class="header__menu-item">
 						<button class="header__menu-button header__menu-button--contacts" type="button">Contacts</button>
@@ -38,7 +38,7 @@
 								while (have_rows('submenu_links-repeater', 'option')) : the_row();
 							?>
 
-							<a href="<?php echo get_sub_field('link')['url'] ?>"><?php echo get_sub_field('link')['title'] ?></a>
+							<a href="<?php echo get_sub_field('link')['url'] ?>" rel ="nofollow" target="_blank"><?php echo get_sub_field('link')['title'] ?></a>
 
 							<?php
 								endwhile;
