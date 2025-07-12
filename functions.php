@@ -109,3 +109,16 @@ if( function_exists('acf_add_options_page') ) {
 		'redirect'		=> false
 	));
 }
+
+add_action('template_redirect', function() {
+  if (is_page()) {
+    $allowed_pages = array('music', 'home');
+    if (!is_page($allowed_pages)) {
+      wp_redirect(home_url('/'));
+      exit;
+    }
+  } else {
+    wp_redirect(home_url('/'));
+    exit;
+  }
+});
