@@ -51,7 +51,7 @@
 						</div>
 					</li>
 					<li class="header__menu-item">
-						<a href="#" class="header__menu-link">Music</a>
+						<a href="/music" class="header__menu-link">Music</a>
 					</li>
 				</ul>
 			</nav>
