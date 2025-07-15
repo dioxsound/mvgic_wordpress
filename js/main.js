@@ -24,7 +24,8 @@ function updateBlurSmooth () {
   const maxBlur = 25
   const scroll = Math.min(window.scrollY, maxScroll)
   const blurValue = (scroll / maxScroll) * maxBlur
-  if (background) background.style.setProperty('--blur-amount', `${blurValue}px`)
+  if (background)
+    background.style.setProperty('--blur-amount', `${blurValue}px`)
 }
 window.addEventListener('scroll', () => {
   requestAnimationFrame(updateBlurSmooth)
@@ -32,32 +33,37 @@ window.addEventListener('scroll', () => {
 
 // ============ ГАЛЕРЕЯ ============
 function initIntersectionObserver () {
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      const el = entry.target
-      if (entry.isIntersecting) {
-        el.classList.add('in-view')
-        el.classList.remove('above', 'below')
-      } else {
-        const bounding = el.getBoundingClientRect()
-        const viewportHeight = window.innerHeight
-        if (bounding.top < 0) {
-          el.classList.remove('in-view', 'below')
-          el.classList.add('above')
-        } else if (bounding.top > viewportHeight) {
-          el.classList.remove('in-view', 'above')
-          el.classList.add('below')
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        const el = entry.target
+        if (entry.isIntersecting) {
+          el.classList.add('in-view')
+          el.classList.remove('above', 'below')
         } else {
-          el.classList.remove('in-view', 'above', 'below')
+          const bounding = el.getBoundingClientRect()
+          const viewportHeight = window.innerHeight
+          if (bounding.top < 0) {
+            el.classList.remove('in-view', 'below')
+            el.classList.add('above')
+          } else if (bounding.top > viewportHeight) {
+            el.classList.remove('in-view', 'above')
+            el.classList.add('below')
+          } else {
+            el.classList.remove('in-view', 'above', 'below')
+          }
         }
-      }
-    })
-  }, {
-    threshold: 0,
-    rootMargin: '10px 0px'
-  })
+      })
+    },
+    {
+      threshold: 0,
+      rootMargin: '10px 0px'
+    }
+  )
 
-  document.querySelectorAll('.gallery__item').forEach(item => observer.observe(item))
+  document
+    .querySelectorAll('.gallery__item')
+    .forEach(item => observer.observe(item))
 }
 initIntersectionObserver()
 
@@ -116,40 +122,64 @@ document.addEventListener('DOMContentLoaded', function () {
 })
 
 // ============ AJAX-ПЕРЕХОДЫ ============
+function isInternalLink (link) {
+  const href = link.getAttribute('href')
+  return (
+    link.hostname === location.hostname &&
+    !href.includes('#') &&
+    !href.includes('wp-admin') &&
+    !href.includes('wp-login') &&
+    !link.target &&
+    !link.closest('.no-ajax')
+  )
+}
+
 function ajaxifyLinks () {
-  document.querySelectorAll('a').forEach(link => {
+  const containers = ['header', 'footer', 'main']
+  const selector = containers.map(sel => `${sel} a`).join(',')
+
+  document.querySelectorAll(selector).forEach(link => {
+    const href = link.getAttribute('href')
+    
     if (
-      link.hostname === location.hostname &&
-      !link.href.includes('#') &&
-      !link.target &&
-      !link.closest('.no-ajax') // если есть исключения
+      !href ||
+      link.hostname !== location.hostname ||
+      href.includes('#') ||
+      href.includes('wp-admin') ||
+      href.includes('wp-login') ||
+      link.target ||
+      link.closest('.no-ajax')
     ) {
-      link.addEventListener('click', function (e) {
-        e.preventDefault()
-        const url = this.href
-
-        fetch(url)
-          .then(res => res.text())
-          .then(html => {
-            const parser = new DOMParser()
-            const doc = parser.parseFromString(html, 'text/html')
-            const newMain = doc.querySelector('main')
-
-            if (newMain) {
-              document.querySelector('main').innerHTML = newMain.innerHTML
-              window.history.pushState({}, '', url)
-
-              // Реинициализировать скрипты после загрузки
-              initIntersectionObserver()
-              updateHeaderHeight()
-              window.scrollTo(0, 0)
-            }
-          })
-          .catch(err => console.error('AJAX переход не удался', err))
-      })
+      return
     }
+
+    link.addEventListener('click', function (e) {
+      e.preventDefault()
+      const url = this.href
+
+      fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(html, 'text/html')
+          const newMain = doc.querySelector('main')
+
+          if (newMain) {
+            document.querySelector('main').innerHTML = newMain.innerHTML
+            window.history.pushState({}, '', url)
+
+            initIntersectionObserver()
+            updateHeaderHeight()
+            ajaxifyLinks()
+            window.scrollTo(0, 0)
+          }
+        })
+        .catch(err => console.error('AJAX переход не удался', err))
+    })
   })
 }
+
+
 ajaxifyLinks()
 
 // ============ POPSTATE (назад / вперёд) ============
