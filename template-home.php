@@ -3,7 +3,7 @@
 Template Name: HOME TEMPLATE
 */
 
-get_header()
+get_header();
 ?>
 
 <main class="main">
@@ -22,58 +22,41 @@ get_header()
 	<section class="gallery">
 		<div class="gallery__container container">
 
-			<figure class="gallery__item item-1">
-				<img src="<?php echo get_field("gallery_image_1")["url"] ?>" alt="<?php echo get_field("gallery_image_1")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_1")["caption"] ?>
-				</figcaption>
-			</figure>
+			<?php
+			for ($i = 1; $i <= 7; $i++) {
+				$media = get_field("gallery_image_$i");
+				if (!$media) continue;
 
-			<figure class="gallery__item item-2">
-				<img src="<?php echo get_field("gallery_image_2")["url"] ?>" alt="<?php echo get_field("gallery_image_2")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_2")["caption"] ?>
-				</figcaption>
-			</figure>
+				$url = $media['url'];
+				$alt = $media['alt'] ?? '';
+				$caption = $media['caption'] ?? '';
+				$description = $media['description'] ?? '';
+				$mime = $media['mime_type'] ?? '';
 
-			<figure class="gallery__item item-3">
-				<img src="<?php echo get_field("gallery_image_3")["url"] ?>" alt="<?php echo get_field("gallery_image_3")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_3")["caption"] ?>
-				</figcaption>
-			</figure>
+				echo '<figure class="gallery__item item-' . $i . '">';
 
-			<figure class="gallery__item item-4">
-				<img src="<?php echo get_field("gallery_image_4")["url"] ?>" alt="<?php echo get_field("gallery_image_4")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_4")["caption"] ?>
-				</figcaption>
-			</figure>
+				if (strpos($mime, 'image/') === 0) {
+					echo '<img src="' . esc_url($url) . '" alt="' . esc_attr($alt) . '" class="gallery__image">';
+					if (!empty($caption)) {
+						echo '<figcaption>' . esc_html($caption) . '</figcaption>';
+					}
+				} elseif (strpos($mime, 'video/') === 0) {
+					echo '<video class="gallery__video" autoplay loop muted playsinline>';
+					echo '<source src="' . esc_url($url) . '" type="' . esc_attr($mime) . '">';
+					echo '</video>';
+					if (!empty($description)) {
+						echo '<figcaption>' . esc_html($description) . '</figcaption>';
+					}
+				}
 
-			<figure class="gallery__item item-5">
-				<img src="<?php echo get_field("gallery_image_5")["url"] ?>" alt="<?php echo get_field("gallery_image_5")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_5")["caption"] ?>
-				</figcaption>
-			</figure>
+				echo '</figure>';
+			}
+			?>
 
-			<figure class="gallery__item item-6">
-				<img src="<?php echo get_field("gallery_image_6")["url"] ?>" alt="<?php echo get_field("gallery_image_6")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_6")["caption"] ?>
-				</figcaption>
-			</figure>
-
-			<figure class="gallery__item item-7">
-				<img src="<?php echo get_field("gallery_image_7")["url"] ?>" alt="<?php echo get_field("gallery_image_7")["alt"] ?>" class="gallery__image">
-				<figcaption>
-					<?php echo get_field("gallery_image_7")["caption"] ?>
-				</figcaption>
-			</figure>
 
 		</div>
 	</section>
 
 </main>
 
-<?php get_footer() ?>
+<?php get_footer(); ?>

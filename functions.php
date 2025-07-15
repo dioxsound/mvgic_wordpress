@@ -91,7 +91,7 @@ function mvgic_scripts()
 {
 	wp_enqueue_style('mvgic-style', get_stylesheet_uri(), array(), _S_VERSION);
 
-	wp_enqueue_style('mvgic-main-css', get_template_directory_uri() . '/styles/styles.css', array(), _S_VERSION);
+	wp_enqueue_style('mvgic-main-css', get_template_directory_uri() . '/styles/styles.min.css', array(), _S_VERSION);
 
 	wp_enqueue_script('mvgic-main-js', get_template_directory_uri() . '/js/main.js', array('jquery'), _S_VERSION, true);
 }

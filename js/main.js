@@ -8,66 +8,60 @@ const muteButton = document.querySelector('.header__menu-button')
 let lastScrollY = 0
 let ticking = false
 
-// ============ ОТСЛЕЖИВАНИЕ ВЫСОТЫ ШАПКИ ============
+// ============ ВЫСОТА ШАПКИ ============
 function updateHeaderHeight () {
   document.documentElement.style.setProperty(
     '--header-height',
     `${header.offsetHeight}px`
   )
 }
-
-// Обновляем высоту шапки при загрузке и изменении размеров окна
 updateHeaderHeight()
 window.addEventListener('resize', updateHeaderHeight)
 
-// ============ АНИМАЦИЯ РАЗМЫТИЯ ФОНА ============
+// ============ АНИМАЦИЯ ФОНА ============
 function updateBlurSmooth () {
   const maxScroll = 300
   const maxBlur = 25
   const scroll = Math.min(window.scrollY, maxScroll)
   const blurValue = (scroll / maxScroll) * maxBlur
-
-  background.style.setProperty('--blur-amount', `${blurValue}px`)
+  if (background) background.style.setProperty('--blur-amount', `${blurValue}px`)
 }
-
 window.addEventListener('scroll', () => {
   requestAnimationFrame(updateBlurSmooth)
 })
 
-// ============ ИНТЕРСЕКЦИОННЫЙ ОБСЕРВЕР ДЛЯ ГАЛЕРЕИ ============
-function handleIntersection (entries) {
-  entries.forEach(entry => {
-    const el = entry.target
-
-    if (entry.isIntersecting) {
-      el.classList.add('in-view')
-      el.classList.remove('above', 'below')
-    } else {
-      const bounding = el.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-
-      if (bounding.top < 0) {
-        el.classList.remove('in-view', 'below')
-        el.classList.add('above')
-      } else if (bounding.top > viewportHeight) {
-        el.classList.remove('in-view', 'above')
-        el.classList.add('below')
+// ============ ГАЛЕРЕЯ ============
+function initIntersectionObserver () {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      const el = entry.target
+      if (entry.isIntersecting) {
+        el.classList.add('in-view')
+        el.classList.remove('above', 'below')
       } else {
-        el.classList.remove('in-view', 'above', 'below')
+        const bounding = el.getBoundingClientRect()
+        const viewportHeight = window.innerHeight
+        if (bounding.top < 0) {
+          el.classList.remove('in-view', 'below')
+          el.classList.add('above')
+        } else if (bounding.top > viewportHeight) {
+          el.classList.remove('in-view', 'above')
+          el.classList.add('below')
+        } else {
+          el.classList.remove('in-view', 'above', 'below')
+        }
       }
-    }
+    })
+  }, {
+    threshold: 0,
+    rootMargin: '10px 0px'
   })
+
+  document.querySelectorAll('.gallery__item').forEach(item => observer.observe(item))
 }
+initIntersectionObserver()
 
-const observer = new IntersectionObserver(handleIntersection, {
-  threshold: 0,
-  rootMargin: '10px 0px'
-})
-
-galleryItems.forEach(item => observer.observe(item))
-
-// ============ КОНТРОЛЬ АУДИО ============
-
+// ============ АУДИО ============
 if (audio && muteButton) {
   let audioPlaying = false
 
@@ -86,8 +80,7 @@ if (audio && muteButton) {
   })
 }
 
-
-// ============ МЕНЮ С ПОДМЕНЮ "КОНТАКТЫ" ============
+// ============ ПОДМЕНЮ "КОНТАКТЫ" ============
 document.addEventListener('DOMContentLoaded', function () {
   const headerMenuItems = document.querySelectorAll('.header__menu-item')
   const submenu = document.querySelector('.header__submenu')
@@ -96,8 +89,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!submenu || !closeBtn) return
 
   let contactsMenuItem = null
-
-  // Найдём пункт меню "Contacts"
   headerMenuItems.forEach(item => {
     const link = item.querySelector('.header__menu-button')
     if (link && link.textContent.trim() === 'Contacts') {
@@ -107,22 +98,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (!contactsMenuItem) return
 
-  // Открытие подменю по клику на "Contacts"
   contactsMenuItem.addEventListener('click', function (e) {
     e.stopPropagation()
     submenu.classList.add('open')
   })
 
-  // Закрытие подменю по клику на кнопку "Close"
   closeBtn.addEventListener('click', function (e) {
     e.stopPropagation()
     submenu.classList.remove('open')
   })
 
-  // Закрытие подменю при клике вне его области
   document.addEventListener('click', function (e) {
     if (!submenu.contains(e.target) && !contactsMenuItem.contains(e.target)) {
       submenu.classList.remove('open')
     }
   })
+})
+
+// ============ AJAX-ПЕРЕХОДЫ ============
+function ajaxifyLinks () {
+  document.querySelectorAll('a').forEach(link => {
+    if (
+      link.hostname === location.hostname &&
+      !link.href.includes('#') &&
+      !link.target &&
+      !link.closest('.no-ajax') // если есть исключения
+    ) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault()
+        const url = this.href
+
+        fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser()
+            const doc = parser.parseFromString(html, 'text/html')
+            const newMain = doc.querySelector('main')
+
+            if (newMain) {
+              document.querySelector('main').innerHTML = newMain.innerHTML
+              window.history.pushState({}, '', url)
+
+              // Реинициализировать скрипты после загрузки
+              initIntersectionObserver()
+              updateHeaderHeight()
+              window.scrollTo(0, 0)
+            }
+          })
+          .catch(err => console.error('AJAX переход не удался', err))
+      })
+    }
+  })
+}
+ajaxifyLinks()
+
+// ============ POPSTATE (назад / вперёд) ============
+window.addEventListener('popstate', () => {
+  fetch(location.href)
+    .then(res => res.text())
+    .then(html => {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(html, 'text/html')
+      const newMain = doc.querySelector('main')
+      if (newMain) {
+        document.querySelector('main').innerHTML = newMain.innerHTML
+        initIntersectionObserver()
+        updateHeaderHeight()
+        window.scrollTo(0, 0)
+      }
+    })
 })

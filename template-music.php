@@ -38,10 +38,10 @@ get_header()
 						<h2 class="music__track-title"><?php echo esc_html($title); ?></h2>
 						<div class="music__track-item">
 							<?php if ($youtube) : ?>
-								<a href="<?php echo esc_url($youtube); ?>" class="music__track-link" target="_blank">YOUTUBE</a>
+								<a href="<?php echo esc_url($youtube); ?>" class="music__track-link no-ajax" target="_blank">YOUTUBE</a>
 							<?php endif; ?>
 							<?php if ($spotify) : ?>
-								<a href="<?php echo esc_url($spotify); ?>" class="music__track-link" target="_blank">SPOTIFY</a>
+								<a href="<?php echo esc_url($spotify); ?>" class="music__track-link no-ajax" target="_blank">SPOTIFY</a>
 							<?php endif; ?>
 						</div>
 					</div>
